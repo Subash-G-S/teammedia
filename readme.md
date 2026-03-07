@@ -1,0 +1,1 @@
+This is a web project for Team Media, a student run multimedia club of Amrita Vishwa Vidyapeetham Coimbatore. 
