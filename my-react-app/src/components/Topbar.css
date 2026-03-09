@@ -1,0 +1,9 @@
+.topbar{
+  height:60px;
+  background:white;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 30px;
+  border-bottom:1px solid #e5e7eb;
+}

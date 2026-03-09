@@ -1,0 +1,37 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+
+.header {
+  background: #111827;
+  color: white;
+  padding: 15px 30px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Navigation */
+
+.navbar {
+  display: flex;
+  gap: 20px;
+  padding: 10px 30px;
+  background: #1f2937;
+}
+
+.navbar a {
+  color: white;
+  font-weight: 500;
+}
+
+/* Main content */
+
+.main-content {
+  flex: 1;
+  padding: 30px;
+  background: #f3f4f6;
+}
