@@ -1,0 +1,24 @@
+{
+  "name": "teammedia",
+  "version": "1.0.0",
+  "description": "This is a web project for Team Media, a student run multimedia club of Amrita Vishwa Vidyapeetham Coimbatore.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Subash-G-S/teammedia.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Subash-G-S/teammedia/issues"
+  },
+  "homepage": "https://github.com/Subash-G-S/teammedia#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
