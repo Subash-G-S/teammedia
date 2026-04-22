@@ -1,4 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { onAuthStateChanged } from "firebase/auth"
+
+import { auth } from "./services/firebase"
 
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
@@ -8,24 +12,22 @@ import Assignments from "./pages/Assignments"
 import GenerateLetter from "./pages/GenerateLetter"
 
 import Layout from "./components/Layout"
-import { auth } from "./services/firebase"
-
-
-
-function ProtectedRoute({ children }) {
-
-  const user = auth.currentUser
-
-  if (!user) {
-    return <Navigate to="/" />
-  }
-
-  return children
-}
-
-
 
 function App() {
+
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
+
+  if (loading) return <p>Loading...</p>
 
   return (
 
@@ -33,79 +35,78 @@ function App() {
 
       <Routes>
 
-        {/* LOGIN */}
+        {/* Login */}
+        <Route
+          path="/"
+          element={!user ? <Login /> : <Navigate to="/dashboard" />}
+        />
 
-        <Route path="/" element={<Login />} />
-
-
-        {/* DASHBOARD */}
-
+        {/* Dashboard */}
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <Dashboard />
-              </Layout>
-            </ProtectedRoute>
+            user
+              ? <Layout><Dashboard /></Layout>
+              : <Navigate to="/" />
           }
         />
 
-
-        {/* MEMBERS */}
-
+        {/* Members */}
         <Route
           path="/members"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <Members />
-              </Layout>
-            </ProtectedRoute>
+            user
+              ? <Layout><Members /></Layout>
+              : <Navigate to="/" />
           }
         />
 
-
-        {/* EVENTS */}
-
+        {/* Events */}
         <Route
           path="/events"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <Events />
-              </Layout>
-            </ProtectedRoute>
+            user
+              ? <Layout><Events /></Layout>
+              : <Navigate to="/" />
           }
         />
 
-
-        {/* ASSIGNMENTS */}
-
+        {/* Assignments */}
         <Route
           path="/assignments"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <Assignments />
-              </Layout>
-            </ProtectedRoute>
+            user
+              ? <Layout><Assignments /></Layout>
+              : <Navigate to="/" />
           }
         />
 
-
-        {/* LETTER GENERATOR */}
-
+        {/* Letters */}
         <Route
           path="/letters"
           element={
-            <ProtectedRoute>
-              <Layout>
-                <GenerateLetter />
-              </Layout>
-            </ProtectedRoute>
+            user
+              ? <Layout><GenerateLetter /></Layout>
+              : <Navigate to="/" />
           }
         />
+
+        <Route
+          path="/events/:id"
+          element={
+            <Layout>
+              <Events />
+            </Layout>
+          }
+        />
+        <Route
+  path="/assignments/:eventId"
+  element={
+    user
+      ? <Layout><Assignments /></Layout>
+      : <Navigate to="/" />
+  }
+/>
 
       </Routes>
 
