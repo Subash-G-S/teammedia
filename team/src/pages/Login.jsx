@@ -7,41 +7,56 @@ function Login() {
 
   const [email,setEmail] = useState("")
   const [password,setPassword] = useState("")
+  const [error,setError] = useState("")
   const navigate = useNavigate()
 
   const handleLogin = async () => {
 
+    setError("")
+
     try {
-
       await signInWithEmailAndPassword(auth,email,password)
-
       navigate("/dashboard")
-
-    } catch(error) {
-
-      alert(error.message)
-
+    } catch(err) {
+      setError("Invalid email or password")
     }
 
   }
 
   return (
-    <div>
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
 
-      <h2>Admin Login</h2>
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-[350px]">
 
-      <input
-        placeholder="Email"
-        onChange={(e)=>setEmail(e.target.value)}
-      />
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          Admin Login
+        </h2>
 
-      <input
-        type="password"
-        placeholder="Password"
-        onChange={(e)=>setPassword(e.target.value)}
-      />
+        {error && (
+          <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+        )}
 
-      <button onClick={handleLogin}>Login</button>
+        <input
+          className="w-full mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Email"
+          onChange={(e)=>setEmail(e.target.value)}
+        />
+
+        <input
+          type="password"
+          className="w-full mb-6 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Password"
+          onChange={(e)=>setPassword(e.target.value)}
+        />
+
+        <button
+          onClick={handleLogin}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold"
+        >
+          Login
+        </button>
+
+      </div>
 
     </div>
   )
