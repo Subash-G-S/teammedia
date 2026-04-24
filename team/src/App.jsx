@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { onAuthStateChanged } from "firebase/auth"
-
+import Loader from "./components/Loader"
 import { auth } from "./services/firebase"
 
 import Login from "./pages/Login"
@@ -27,7 +27,7 @@ function App() {
     return () => unsubscribe()
   }, [])
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <Loader />
 
   return (
 
