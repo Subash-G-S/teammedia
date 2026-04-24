@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { collection, getDocs, addDoc } from "firebase/firestore"
 import { db } from "../services/firebase"
+import Loader from "../components/Loader"
 
 function Assignments(){
 
@@ -13,26 +14,42 @@ function Assignments(){
 
   const [selectedMember,setSelectedMember] = useState("")
   const [role,setRole] = useState("")
-
+  const [loading, setLoading] = useState(true)
   const membersRef = collection(db,"members")
   const assignmentsRef = collection(db,"assignments")
 
   // 🔹 Fetch Members
   const fetchMembers = async () => {
-    const data = await getDocs(membersRef)
-    setMembers(data.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    })))
+    try {
+      setLoading(true)
+      const data = await getDocs(membersRef)
+      setMembers(data.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })))
+      
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   // 🔹 Fetch Assignments
   const fetchAssignments = async () => {
-    const data = await getDocs(assignmentsRef)
+    try {
+      setLoading(true)
+      const data = await getDocs(assignmentsRef)
     setAssignments(data.docs.map(doc => ({
       ...doc.data(),
       id: doc.id
     })))
+    } catch (err) {
+      console.error (err)
+    } finally {
+      setLoading(false)
+    }
+    
   }
 
   useEffect(()=>{
@@ -62,7 +79,7 @@ function Assignments(){
 
   // 🔹 Filter current event assignments
   const currentAssignments = assignments.filter(a => a.eventId === eventId)
-
+  if (loading) return <Loader />
   return(
 
     <div>

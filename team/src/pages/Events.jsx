@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { collection, addDoc, getDocs } from "firebase/firestore"
 import { db } from "../services/firebase"
 import { useParams, useNavigate } from "react-router-dom"
-
+import Loader from "../components/Loader"
 function Events(){
 
   const [name,setName] = useState("")
@@ -11,6 +11,7 @@ function Events(){
   const [date,setDate] = useState("")
   const [venue,setVenue] = useState("")
   const [events,setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
   const { id } = useParams()
   const navigate = useNavigate()
 
@@ -18,16 +19,23 @@ function Events(){
 
   // 🔹 Fetch events
   const fetchEvents = async () => {
+  try {
+    setLoading(true)
 
     const data = await getDocs(eventsRef)
 
-    const list = data.docs.map((doc)=>({
+    const list = data.docs.map((doc) => ({
       ...doc.data(),
       id: doc.id
     }))
 
     setEvents(list)
+  } catch (err) {
+    console.error(err)
+  } finally {
+    setLoading(false)
   }
+}
 
   useEffect(()=>{
     fetchEvents()
@@ -60,7 +68,7 @@ function Events(){
 
     fetchEvents() // refresh list
   }
-
+  if (loading) return <Loader />
   return(
 
     <div>

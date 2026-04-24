@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react"
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore"
 import { db } from "../services/firebase"
+import Loader from "../components/Loader"
 
 function Members() {
-
+  const [loading, setLoading] = useState(true)
   const [members, setMembers] = useState([])
   const [name, setName] = useState("")
   const [department, setDepartment] = useState("")
@@ -12,14 +13,22 @@ function Members() {
   const membersRef = collection(db, "members")
 
   const fetchMembers = async () => {
-    const data = await getDocs(membersRef)
+    try {
+      setLoading(true)
+      const data = await getDocs(membersRef)
 
-    const list = data.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id
-    }))
+      const list = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id
+      }))
 
-    setMembers(list)
+      setMembers(list)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+    
   }
 
   useEffect(() => {
@@ -51,7 +60,7 @@ function Members() {
 
     fetchMembers()
   }
-
+  if (loading) return <Loader />
   return (
 
     <div>
