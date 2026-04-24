@@ -1,41 +1,46 @@
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 
-function Sidebar() {
+function Sidebar({ closeSidebar }) {
+
+  const location = useLocation()
+
+  const links = [
+    { name: "Dashboard", path: "/dashboard" },
+    { name: "Members", path: "/members" },
+    { name: "Events", path: "/events" }
+  ]
 
   return (
-    <div className="w-64 h-screen bg-slate-900 text-white flex flex-col p-6">
 
-      <h1 className="text-2xl font-bold mb-10">
+    <div className="w-full text-white">
+
+      <h1 className="text-xl font-bold mb-6">
         TEAM MEDIA
       </h1>
 
-      <nav className="flex flex-col gap-4">
+      <div className="space-y-2">
 
-        <Link to="/dashboard" className="hover:text-blue-400">
-          Dashboard
-        </Link>
+        {links.map(link => (
 
-        <Link to="/members" className="hover:text-blue-400">
-          Members
-        </Link>
+          <Link
+            key={link.path}
+            to={link.path}
+            onClick={closeSidebar}  // 🔥 THIS IS THE FIX
+            className={`block px-4 py-2 rounded-lg transition ${
+              location.pathname.startsWith(link.path)
+                ? "bg-white/20"
+                : "hover:bg-white/10"
+            }`}
+          >
+            {link.name}
+          </Link>
 
-        <Link to="/events" className="hover:text-blue-400">
-          Events
-        </Link>
+        ))}
 
-        <Link to="/assignments" className="hover:text-blue-400">
-          Assignments
-        </Link>
-
-        <Link to="/letters" className="hover:text-blue-400">
-          Letters
-        </Link>
-
-      </nav>
+      </div>
 
     </div>
   )
-
 }
 
 export default Sidebar

@@ -9,7 +9,7 @@
   content: "";
   position: absolute;
   border-radius: 50px;
-  box-shadow: 0 0 0 3px inset #000000;
+  box-shadow: 0 0 0 3px inset #ffffff;
   animation: l4 2.5s infinite;
 }
 .loader:after {
@@ -45,9 +45,12 @@
   }
 }
 .loader-wrapper {
-  height: 100vh;
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.6); /* dark transparent */
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #ffffff; /* optional but looks better */
+  z-index: 999;
 }

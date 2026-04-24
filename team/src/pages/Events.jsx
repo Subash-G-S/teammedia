@@ -2,7 +2,9 @@ import { useState, useEffect } from "react"
 import { collection, addDoc, getDocs } from "firebase/firestore"
 import { db } from "../services/firebase"
 import { useParams, useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
 import Loader from "../components/Loader"
+
 function Events(){
 
   const [name,setName] = useState("")
@@ -11,40 +13,33 @@ function Events(){
   const [date,setDate] = useState("")
   const [venue,setVenue] = useState("")
   const [events,setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading,setLoading] = useState(true)
+
   const { id } = useParams()
   const navigate = useNavigate()
 
   const eventsRef = collection(db,"events")
 
-  // 🔹 Fetch events
   const fetchEvents = async () => {
-  try {
-    setLoading(true)
-
-    const data = await getDocs(eventsRef)
-
-    const list = data.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id
-    }))
-
-    setEvents(list)
-  } catch (err) {
-    console.error(err)
-  } finally {
-    setLoading(false)
+    try{
+      setLoading(true)
+      const data = await getDocs(eventsRef)
+      setEvents(data.docs.map(doc => ({...doc.data(), id: doc.id})))
+    }catch(err){
+      console.error(err)
+    }finally{
+      setLoading(false)
+    }
   }
-}
 
   useEffect(()=>{
     fetchEvents()
   },[])
-  const filteredEvents = id
-  ? events.filter(e => e.parentId === id)
-  : events.filter(e => !e.parentId)
 
-  // 🔹 Add event
+  const filteredEvents = id
+    ? events.filter(e => e.parentId === id)
+    : events.filter(e => !e.parentId)
+
   const addEvent = async () => {
 
     if(!name || !date || !venue){
@@ -66,132 +61,118 @@ function Events(){
     setType("small")
     setParentId("")
 
-    fetchEvents() // refresh list
+    fetchEvents()
   }
+
   if (loading) return <Loader />
+
   return(
 
     <div>
 
-      <h1 className="text-2xl font-semibold mb-6">
+      <h1 className="text-2xl font-semibold mb-6 text-white">
         Events
       </h1>
 
-      {/* Form */}
+      {/* FORM */}
 
-      <div className="bg-white p-6 rounded shadow mb-6">
+      <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-xl shadow-lg mb-6">
 
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 
           <input
             placeholder="Event Name"
-            className="border p-2"
+            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
             value={name}
             onChange={(e)=>setName(e.target.value)}
           />
 
           <input
             type="date"
-            className="border p-2"
+            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
             value={date}
             onChange={(e)=>setDate(e.target.value)}
           />
 
           <input
             placeholder="Venue"
-            className="border p-2"
+            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
             value={venue}
             onChange={(e)=>setVenue(e.target.value)}
           />
 
-          <button
-            onClick={addEvent}
-            className="bg-blue-600 text-white rounded"
-          >
-            Add Event
-          </button>
-
           <select
-            className="border p-2"
+            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
             value={type}
             onChange={(e)=>setType(e.target.value)}
           >
-            <option value="small">Small Event</option>
-            <option value="large">Large Event</option>
+            <option value="small">Small</option>
+            <option value="large">Large</option>
           </select>
-          {type === "small" && (
-  <select
-    className="border p-2"
-    value={parentId}
-    onChange={(e)=>setParentId(e.target.value)}
-  >
-    <option value="">No Parent</option>
 
-    {events
-      .filter(e => e.type === "large")
-      .map(e => (
-        <option key={e.id} value={e.id}>
-          {e.name}
-        </option>
-      ))}
-  </select>
-)}
+          <button
+            onClick={addEvent}
+            className="bg-blue-500 hover:bg-blue-600 
+                       shadow-lg hover:shadow-blue-500/40 
+                       text-white rounded-lg transition"
+          >
+            Add
+          </button>
 
         </div>
 
       </div>
 
-      {/* Table */}
+      {/* BACK BUTTON */}
+      {id && (
+        <button
+          onClick={()=>navigate("/events")}
+          className="mb-4 px-4 py-2 bg-white/10 rounded-lg"
+        >
+          ← Back
+        </button>
+      )}
 
-      <div className="bg-white rounded shadow">
+      {/* EVENTS GRID */}
 
-        {/* BACK BUTTON */}
-{id && (
-  <button
-    onClick={()=>navigate("/events")}
-    className="mb-4 bg-gray-200 px-4 py-2 rounded"
-  >
-    ← Back
-  </button>
-)}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-{/* EVENTS GRID */}
-<div className="grid grid-cols-3 gap-6">
+        {filteredEvents.map(event => (
 
-  {filteredEvents.map(event => (
+          <motion.div
+            key={event.id}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            className="bg-white/10 backdrop-blur-xl border border-white/10 
+                       p-6 rounded-xl shadow-lg 
+                       hover:shadow-blue-500/20 
+                       cursor-pointer transition-all duration-300"
 
-    <div
-      key={event.id}
-      className="bg-white p-6 rounded shadow cursor-pointer hover:shadow-lg"
-      onClick={() => {
-        if(event.type === "large"){
-          navigate(`/events/${event.id}`)
-        } else {
-  navigate(`/assignments/${event.id}`)
-}
-      }}
-    >
+            onClick={()=>{
+              if(event.type === "large"){
+                navigate(`/events/${event.id}`)
+              } else {
+                navigate(`/assignments/${event.id}`)
+              }
+            }}
+          >
 
-      <h2 className="text-lg font-semibold">
-        {event.name}
-      </h2>
+            <h2 className="text-lg font-semibold text-white">
+              {event.name}
+            </h2>
 
-      <p className="text-sm text-gray-500 mt-2">
-        {event.type === "large" ? "Large Event" : "Small Event"}
-      </p>
+            <p className="text-sm text-gray-300 mt-2">
+              {event.type === "large" ? "Large Event" : "Small Event"}
+            </p>
 
-    </div>
+          </motion.div>
 
-  ))}
-
-</div>
+        ))}
 
       </div>
 
     </div>
-
   )
-
 }
 
 export default Events
