@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { collection, getDocs, addDoc } from "firebase/firestore"
+import { collection, getDocs, addDoc, updateDoc, doc } from "firebase/firestore"
 import { db } from "../services/firebase"
 import Loader from "../components/Loader"
 
@@ -22,6 +22,7 @@ function Assignments(){
   const membersRef = collection(db,"members")
   const assignmentsRef = collection(db,"assignments")
 
+  // 🔹 Fetch data
   const fetchData = async () => {
     try{
       setLoading(true)
@@ -43,7 +44,7 @@ function Assignments(){
     fetchData()
   },[])
 
-  // 🔥 close dropdown on outside click
+  // 🔹 Close dropdown outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -59,6 +60,7 @@ function Assignments(){
     m.name.toLowerCase().includes(search.toLowerCase())
   )
 
+  // 🔹 Assign member
   const assignMember = async () => {
 
     if(!selectedMember || !role){
@@ -69,11 +71,24 @@ function Assignments(){
     await addDoc(assignmentsRef,{
       memberId: selectedMember,
       eventId,
-      role
+      role,
+      status: "pending" // 🔥 NEW
     })
 
     setSelectedMember("")
     setRole("")
+    fetchData()
+  }
+
+  // 🔹 Mark covered
+  const markCovered = async (id) => {
+
+    const ref = doc(db, "assignments", id)
+
+    await updateDoc(ref, {
+      status: "completed"
+    })
+
     fetchData()
   }
 
@@ -85,7 +100,7 @@ function Assignments(){
 
     <div className="space-y-6">
 
-      {/* 🔥 HEADER */}
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
 
         <h1 className="text-2xl font-semibold text-white">
@@ -101,7 +116,7 @@ function Assignments(){
 
       </div>
 
-      {/* 🔥 ASSIGNED MEMBERS (MOBILE FRIENDLY CARDS) */}
+      {/* ASSIGNMENTS LIST */}
 
       {currentAssignments.length === 0 ? (
 
@@ -122,11 +137,43 @@ function Assignments(){
                 key={a.id}
                 className="bg-white/10 border border-white/10 p-4 rounded-xl"
               >
+
                 <p className="text-xs text-gray-400">Member</p>
                 <p className="font-semibold">{member?.name}</p>
 
                 <p className="text-xs text-gray-400 mt-2">Role</p>
                 <p>{a.role}</p>
+
+                {/* STATUS */}
+                <p className="text-xs mt-2">
+                  Status:{" "}
+                  <span className={
+                    a.status === "completed"
+                      ? "text-green-400"
+                      : "text-yellow-400"
+                  }>
+                    {a.status === "completed" ? "Covered" : "Pending"}
+                  </span>
+                </p>
+
+                {/* BUTTON */}
+                {a.status !== "completed" && (
+                  <button
+                    onClick={() => markCovered(a.id)}
+                    className="mt-3 text-xs 
+                               bg-green-500 
+                               px-3 py-1 rounded 
+                               text-white
+                               transition-all duration-200
+                               hover:bg-green-600 
+                               hover:shadow-lg hover:shadow-green-500/40
+                               hover:scale-105
+                               active:scale-95"
+                  >
+                    Mark Covered
+                  </button>
+                )}
+
               </div>
             )
           })}
@@ -135,13 +182,13 @@ function Assignments(){
 
       )}
 
-      {/* 🔥 FORM */}
+      {/* FORM */}
 
       <div className="bg-white/10 border border-white/10 p-4 sm:p-6 rounded-xl relative overflow-visible">
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
 
-          {/* 🔥 CUSTOM DROPDOWN */}
+          {/* DROPDOWN */}
           <div className="relative" ref={dropdownRef}>
 
             <button
@@ -190,7 +237,7 @@ function Assignments(){
 
           </div>
 
-          {/* ROLE INPUT */}
+          {/* ROLE */}
           <input
             placeholder="Role"
             className="bg-white/10 border border-white/20 p-3 rounded-lg text-white text-sm"
@@ -216,7 +263,6 @@ function Assignments(){
       </div>
 
     </div>
-
   )
 }
 
