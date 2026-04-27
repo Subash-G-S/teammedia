@@ -1,9 +1,11 @@
 import Sidebar from "./Sidebar"
 import Topbar from "./Topbar"
+import InstallButton from "./InstallButton"
 
 function Layout({ children }) {
   return (
     <div className="flex min-h-screen">
+      <InstallButton />
 
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-64 bg-black/20 backdrop-blur-xl border-r border-white/10">
