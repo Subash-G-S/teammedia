@@ -14,6 +14,7 @@ function Events(){
   const [venue,setVenue] = useState("")
   const [events,setEvents] = useState([])
   const [loading,setLoading] = useState(true)
+  const [typeOpen, setTypeOpen] = useState(false)
 
   const { id } = useParams()
   const navigate = useNavigate()
@@ -89,7 +90,7 @@ function Events(){
 
           <input
             type="date"
-            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
+            className="w-full bg-white/10 border border-white/20 p-3 rounded-lg text-sm"
             value={date}
             onChange={(e)=>setDate(e.target.value)}
           />
@@ -101,20 +102,55 @@ function Events(){
             onChange={(e)=>setVenue(e.target.value)}
           />
 
-          <select
-            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
-            value={type}
-            onChange={(e)=>setType(e.target.value)}
-          >
-            <option value="small">Small</option>
-            <option value="large">Large</option>
-          </select>
+          <div className="relative">
+
+  {/* Button */}
+  <button
+    onClick={() => setTypeOpen(!typeOpen)}
+    className="w-full bg-white/10 border border-white/20 p-3 rounded-lg text-left text-white"
+  >
+    {type === "small" ? "Small Event" : "Large Event"}
+  </button>
+
+  {/* Options */}
+  {typeOpen && (
+    <div className="absolute mt-2 w-full bg-slate-900 border border-white/10 
+                    rounded-lg shadow-lg z-50">
+
+      <div
+        onClick={() => {
+          setType("small")
+          setTypeOpen(false)
+        }}
+        className="p-3 hover:bg-white/10 cursor-pointer"
+      >
+        Small Event
+      </div>
+
+      <div
+        onClick={() => {
+          setType("large")
+          setTypeOpen(false)
+        }}
+        className="p-3 hover:bg-white/10 cursor-pointer"
+      >
+        Large Event
+      </div>
+
+    </div>
+  )}
+
+</div>
 
           <button
             onClick={addEvent}
-            className="bg-blue-500 hover:bg-blue-600 
-                       shadow-lg hover:shadow-blue-500/40 
-                       text-white rounded-lg transition"
+            className="w-full sm:w-auto 
+             bg-blue-600 hover:bg-blue-700 
+             text-white 
+             py-3 px-4 
+             rounded-lg 
+             shadow-lg 
+             transition"
           >
             Add
           </button>

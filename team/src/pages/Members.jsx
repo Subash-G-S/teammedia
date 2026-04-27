@@ -127,9 +127,13 @@ function Members() {
 
           <button
             onClick={addMember}
-            className="bg-blue-500 hover:bg-blue-600 
-                       shadow-lg hover:shadow-blue-500/40 
-                       rounded-lg transition text-white"
+            className="w-full sm:w-auto 
+             bg-blue-600 hover:bg-blue-700 
+             text-white 
+             py-3 px-4 
+             rounded-lg 
+             shadow-lg 
+             transition"
           >
             Add
           </button>
