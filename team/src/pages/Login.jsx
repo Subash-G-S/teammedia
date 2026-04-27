@@ -16,6 +16,7 @@ function Login() {
 
     try {
       await signInWithEmailAndPassword(auth,email,password)
+      sessionStorage.setItem("justLoggedIn", "true")
       navigate("/dashboard")
     } catch(err) {
       setError("Invalid email or password")

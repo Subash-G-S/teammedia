@@ -11,6 +11,7 @@ function Topbar() {
 
   const handleLogout = async () => {
     await signOut(auth)
+    sessionStorage.clear()
     navigate("/")
   }
 

@@ -19,10 +19,9 @@ function App() {
 
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [showWelcome, setShowWelcome] = useState(
-    sessionStorage.getItem("welcomeShown") !== "true"
-  )
+  const [showWelcome, setShowWelcome] = useState(false)
 
+  // 🔹 Get name
   const name =
     usersMap[user?.email] ||
     user?.displayName ||
@@ -30,24 +29,47 @@ function App() {
     "User"
 
   useEffect(() => {
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+
       setUser(currentUser)
       setLoading(false)
+
+      if (currentUser) {
+
+        const justLoggedIn = sessionStorage.getItem("justLoggedIn")
+        const hasSeenWelcome = sessionStorage.getItem("welcomeShown")
+
+        // 🔥 CASE 1: login
+        if (justLoggedIn === "true") {
+          setShowWelcome(true)
+          sessionStorage.removeItem("justLoggedIn")
+          sessionStorage.setItem("welcomeShown", "true")
+        }
+
+        // 🔥 CASE 2: reopen (new tab/session)
+        else if (!hasSeenWelcome) {
+          setShowWelcome(true)
+          sessionStorage.setItem("welcomeShown", "true")
+        }
+      }
+
     })
 
     return () => unsubscribe()
+
   }, [])
 
+  // 🔹 Show welcome screen
   if (user && showWelcome) {
     return (
       <WelcomeScreen
         name={name}
         onFinish={() => {
-          sessionStorage.setItem("welcomeShown", "true")
           setShowWelcome(false)
         }}
       />
-   )
+    )
   }
 
   if (loading) return <Loader />
@@ -114,22 +136,24 @@ function App() {
           }
         />
 
+        {/* Nested routes */}
         <Route
           path="/events/:id"
           element={
-            <Layout>
-              <Events />
-            </Layout>
+            user
+              ? <Layout><Events /></Layout>
+              : <Navigate to="/" />
           }
         />
+
         <Route
-  path="/assignments/:eventId"
-  element={
-    user
-      ? <Layout><Assignments /></Layout>
-      : <Navigate to="/" />
-  }
-/>
+          path="/assignments/:eventId"
+          element={
+            user
+              ? <Layout><Assignments /></Layout>
+              : <Navigate to="/" />
+          }
+        />
 
       </Routes>
 

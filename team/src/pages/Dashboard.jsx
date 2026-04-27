@@ -95,7 +95,7 @@ function Dashboard(){
       <div className="mb-8">
 
         <h1 className="text-3xl font-semibold text-white">
-          Welcome Subash 👋
+          Welcome Head 👋
         </h1>
 
         <p className="text-gray-400 mt-2">
