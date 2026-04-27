@@ -3,21 +3,33 @@ import { useEffect, useState } from "react"
 function InstallButton() {
 
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [isInstalled, setIsInstalled] = useState(false)
+  const [showButton, setShowButton] = useState(
+    localStorage.getItem("installDismissed") !== "true"
+  )
 
   useEffect(() => {
 
-    // detect install availability
     const handler = (e) => {
       e.preventDefault()
+
       setDeferredPrompt(e)
+
+      // 🔥 persist that install is available
+      localStorage.setItem("installAvailable", "true")
+
+      setShowButton(true)
     }
 
     window.addEventListener("beforeinstallprompt", handler)
 
-    // detect if already installed
+    // 🔥 if previously available, still show
+    if (localStorage.getItem("installAvailable") === "true") {
+      setShowButton(true)
+    }
+
+    // 🔥 if already installed → hide forever
     if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsInstalled(true)
+      setShowButton(false)
     }
 
     return () => {
@@ -33,19 +45,17 @@ function InstallButton() {
     const choice = await deferredPrompt.userChoice
 
     if (choice.outcome === "accepted") {
-      setIsInstalled(true)
+      localStorage.setItem("installDismissed", "true")
+      setShowButton(false)
     }
-
-    setDeferredPrompt(null)
   }
 
-  // 🔥 don't show if installed or not ready
-  if (isInstalled || !deferredPrompt) return null
+  if (!showButton) return null
 
   return (
     <button
       onClick={handleInstall}
-      className="fixed bottom-6 right-6 
+      className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 
                  bg-blue-600 hover:bg-blue-700 
                  text-white px-4 py-3 rounded-lg 
                  shadow-lg z-[999]"
