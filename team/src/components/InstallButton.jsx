@@ -1,35 +1,26 @@
 import { useEffect, useState } from "react"
 
+let deferredPromptGlobal = null   // 🔥 persists across renders
+
 function InstallButton() {
 
-  const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [showButton, setShowButton] = useState(
-    localStorage.getItem("installDismissed") !== "true"
-  )
+  const [isAvailable, setIsAvailable] = useState(false)
+  const [isInstalled, setIsInstalled] = useState(false)
 
   useEffect(() => {
 
+    // 🔥 capture install event
     const handler = (e) => {
       e.preventDefault()
-
-      setDeferredPrompt(e)
-
-      // 🔥 persist that install is available
-      localStorage.setItem("installAvailable", "true")
-
-      setShowButton(true)
+      deferredPromptGlobal = e
+      setIsAvailable(true)
     }
 
     window.addEventListener("beforeinstallprompt", handler)
 
-    // 🔥 if previously available, still show
-    if (localStorage.getItem("installAvailable") === "true") {
-      setShowButton(true)
-    }
-
-    // 🔥 if already installed → hide forever
+    // 🔥 detect installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
-      setShowButton(false)
+      setIsInstalled(true)
     }
 
     return () => {
@@ -39,18 +30,26 @@ function InstallButton() {
   }, [])
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return
 
-    deferredPrompt.prompt()
-    const choice = await deferredPrompt.userChoice
+    // ❌ No prompt available
+    if (!deferredPromptGlobal) {
+      alert("Install not available yet. Use Chrome menu → Add to Home Screen.")
+      return
+    }
+
+    // ✅ Trigger install
+    deferredPromptGlobal.prompt()
+
+    const choice = await deferredPromptGlobal.userChoice
 
     if (choice.outcome === "accepted") {
-      localStorage.setItem("installDismissed", "true")
-      setShowButton(false)
+      setIsInstalled(true)
     }
+
+    deferredPromptGlobal = null
   }
 
-  if (!showButton) return null
+  if (isInstalled || !isAvailable) return null
 
   return (
     <button
