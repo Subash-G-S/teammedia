@@ -24,11 +24,11 @@ function Login() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-black-900 to-yellow-800">
 
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-[350px]">
+      <div className="bg-yellow p-8 rounded-2xl shadow-xl w-[350px]">
 
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+        <h2 className="text-2xl font-bold mb-6 text-center text-white-800">
           Admin Login
         </h2>
 

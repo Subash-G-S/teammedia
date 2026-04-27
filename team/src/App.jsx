@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 import { onAuthStateChanged } from "firebase/auth"
 import Loader from "./components/Loader"
 import { auth } from "./services/firebase"
+import { usersMap } from "./data/users"
+import WelcomeScreen from "./components/WelcomeScreen"
 
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
@@ -17,6 +19,15 @@ function App() {
 
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(
+    sessionStorage.getItem("welcomeShown") !== "true"
+  )
+
+  const name =
+    usersMap[user?.email] ||
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "User"
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -26,6 +37,18 @@ function App() {
 
     return () => unsubscribe()
   }, [])
+
+  if (user && showWelcome) {
+    return (
+      <WelcomeScreen
+        name={name}
+        onFinish={() => {
+          sessionStorage.setItem("welcomeShown", "true")
+          setShowWelcome(false)
+        }}
+      />
+   )
+  }
 
   if (loading) return <Loader />
 
