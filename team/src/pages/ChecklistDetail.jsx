@@ -16,6 +16,7 @@ function ChecklistDetail() {
 
   const [members, setMembers] = useState([])
   const [items, setItems] = useState([])
+  const [search, setSearch] = useState("")
 
   const fetchData = async () => {
 
@@ -84,10 +85,23 @@ function ChecklistDetail() {
       <h1 className="text-3xl font-bold mb-6">
         Checklist
       </h1>
+      <div className="mb-6">
+  <input
+    type="text"
+    placeholder="Search member..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full bg-white/10 border border-white/20 p-3 rounded-xl"
+  />
+</div>
 
       <div className="space-y-3">
 
-        {members.map(member => {
+        {members
+  .filter(member =>
+    member.name.toLowerCase().includes(search.toLowerCase())
+  )
+  .map(member => {
 
           const item = items.find(
             i =>
