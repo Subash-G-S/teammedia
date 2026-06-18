@@ -20,7 +20,7 @@ const [search, setSearch] = useState("")
 
 const fetchData = async () => {
 
-```
+
 const memberData = await getDocs(
   collection(db, "members")
 )
@@ -42,7 +42,7 @@ setItems(
     ...doc.data()
   }))
 )
-```
+
 
 }
 
@@ -52,7 +52,7 @@ fetchData()
 
 const toggleMember = async (memberId) => {
 
-```
+
 const existing = items.find(
   item =>
     item.checklistId === id &&
@@ -82,7 +82,7 @@ if (existing) {
 }
 
 fetchData()
-```
+
 
 }
 
@@ -93,7 +93,7 @@ member.rollNo?.toLowerCase().includes(search.toLowerCase())
 
 const completedMembers = filteredMembers.filter(member => {
 
-```
+
 const item = items.find(
   i =>
     i.checklistId === id &&
@@ -101,13 +101,13 @@ const item = items.find(
 )
 
 return item?.completed
-```
+
 
 })
 
 const pendingMembers = filteredMembers.filter(member => {
 
-```
+
 const item = items.find(
   i =>
     i.checklistId === id &&
@@ -115,7 +115,7 @@ const item = items.find(
 )
 
 return !item?.completed
-```
+
 
 })
 
