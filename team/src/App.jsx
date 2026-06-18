@@ -5,6 +5,8 @@ import Loader from "./components/Loader"
 import { auth } from "./services/firebase"
 import { usersMap } from "./data/users"
 import WelcomeScreen from "./components/WelcomeScreen"
+import Checklists from "./pages/Checklists"
+import ChecklistDetail from "./pages/ChecklistDetail"
 
 import Login from "./pages/Login"
 import Dashboard from "./pages/Dashboard"
@@ -154,6 +156,23 @@ function App() {
               : <Navigate to="/" />
           }
         />
+        <Route
+  path="/checklists"
+  element={
+    user
+      ? <Layout><Checklists /></Layout>
+      : <Navigate to="/" />
+  }
+/>
+
+<Route
+  path="/checklists/:id"
+  element={
+    user
+      ? <Layout><ChecklistDetail /></Layout>
+      : <Navigate to="/" />
+  }
+/>
 
       </Routes>
 

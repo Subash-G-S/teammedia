@@ -7,7 +7,8 @@ function Sidebar({ closeSidebar }) {
   const links = [
     { name: "Dashboard", path: "/dashboard" },
     { name: "Members", path: "/members" },
-    { name: "Events", path: "/events" }
+    { name: "Events", path: "/events" },
+    { name: "Checklists", path: "/checklists" }
   ]
 
   return (
