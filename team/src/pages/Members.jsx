@@ -119,9 +119,9 @@ function Members() {
 
           <input
             placeholder="Roll No"
-            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
+            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white uppercase"
             value={department}
-            onChange={(e) => setDepartment(e.target.value)}
+            onChange={(e) => setDepartment(e.target.value.toUpperCase())}
           />
 
           <select
