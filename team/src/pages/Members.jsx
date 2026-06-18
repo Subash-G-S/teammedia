@@ -8,6 +8,12 @@ function Members() {
   const [loading, setLoading] = useState(true)
   const [members, setMembers] = useState([])
   const [assignments, setAssignments] = useState([])
+  const roles = [
+  "Photographer",
+  "Videographer",
+  "Video Editor",
+  "Designer"
+]
 
   const [name, setName] = useState("")
   const [department, setDepartment] = useState("")
@@ -118,12 +124,25 @@ function Members() {
             onChange={(e) => setDepartment(e.target.value)}
           />
 
-          <input
-            placeholder="Role"
-            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          />
+          <select
+  className="bg-white/10 border border-white/20 p-3 rounded-lg text-white"
+  value={role}
+  onChange={(e) => setRole(e.target.value)}
+>
+  <option value="" className="text-black">
+    Select Role
+  </option>
+
+  {roles.map((r) => (
+    <option
+      key={r}
+      value={r}
+      className="text-black"
+    >
+      {r}
+    </option>
+  ))}
+</select>
 
           <button
             onClick={addMember}
