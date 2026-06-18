@@ -12,7 +12,9 @@ function Members() {
   "Photographer",
   "Videographer",
   "Video Editor",
-  "Designer"
+  "Designer",
+  "Head",
+  "Advisor"
 ]
 
   const [name, setName] = useState("")
