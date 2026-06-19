@@ -1,3 +1,5 @@
+// ChecklistDetail.jsx
+
 import { useState, useEffect } from "react"
 import {
 collection,
@@ -126,148 +128,230 @@ members.length === 0
 (completedMembers.length / members.length) * 100
 )
 
+const getRoleIcon = (role) => {
+
+
+switch(role){
+
+  case "Photographer":
+    return "📸"
+
+  case "Videographer":
+    return "🎥"
+
+  case "Video Editor":
+    return "🎬"
+
+  case "Designer":
+    return "🎨"
+
+  default:
+    return "👤"
+}
+
+
+}
+
 return (
 
 
-<div>
+<div className="space-y-6">
 
-  <h1 className="text-3xl font-bold mb-6">
-    Checklist
-  </h1>
+  {/* Hero Card */}
 
-  {/* Progress */}
+  <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-6 text-white shadow-xl">
 
-  <div className="mb-6">
+    <h1 className="text-3xl font-bold">
+      Checklist Tracker
+    </h1>
 
-    <div className="flex justify-between mb-2">
+    <p className="mt-2 text-white/80">
+      Track member submissions efficiently
+    </p>
 
-      <span>
-        Progress
-      </span>
+    <div className="mt-4">
 
-      <span>
-        {progress}%
-      </span>
+      <div className="flex justify-between text-sm mb-2">
+        <span>Progress</span>
+        <span>{progress}%</span>
+      </div>
+
+      <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+
+        <div
+          className="h-full bg-white transition-all duration-500"
+          style={{
+            width: `${progress}%`
+          }}
+        />
+
+      </div>
 
     </div>
 
-    <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+  </div>
 
-      <div
-        className="h-full bg-green-500 transition-all duration-500"
-        style={{
-          width: `${progress}%`
-        }}
-      />
+  {/* Stats */}
 
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+    <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
+      <p className="text-sm text-gray-400">
+        Total Members
+      </p>
+
+      <h2 className="text-3xl font-bold mt-2">
+        {members.length}
+      </h2>
+    </div>
+
+    <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-5">
+      <p className="text-sm text-green-300">
+        Submitted
+      </p>
+
+      <h2 className="text-3xl font-bold mt-2">
+        {completedMembers.length}
+      </h2>
+    </div>
+
+    <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-5">
+      <p className="text-sm text-yellow-300">
+        Pending
+      </p>
+
+      <h2 className="text-3xl font-bold mt-2">
+        {pendingMembers.length}
+      </h2>
     </div>
 
   </div>
 
   {/* Search */}
 
-  <div className="mb-6">
+  <div>
 
     <input
       type="text"
       placeholder="Search Name or Roll Number..."
       value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="w-full bg-white/10 border border-white/20
-                 p-3 rounded-xl"
+      onChange={(e)=>setSearch(e.target.value)}
+      className="w-full bg-white/10 border border-white/20 p-4 rounded-2xl"
     />
 
   </div>
 
-  <div className="space-y-8">
+  {/* Pending Section */}
 
-    {/* Submitted */}
+  <div>
 
-    <div>
+    <h2 className="text-2xl font-bold text-yellow-400 mb-4">
+      ⏳ Pending ({pendingMembers.length})
+    </h2>
 
-      <h2 className="text-green-400 text-xl font-semibold mb-4">
-        ✅ Submitted ({completedMembers.length})
-      </h2>
+    <div className="space-y-3">
 
-      <div className="space-y-3">
+      {pendingMembers.map(member => (
 
-        {completedMembers.map(member => (
+        <div
+          key={member.id}
+          onClick={() => toggleMember(member.id)}
+          className="bg-yellow-500/10 border border-yellow-500/20 rounded-3xl p-4 cursor-pointer hover:scale-[1.01] transition-all duration-300"
+        >
 
-          <div
-            key={member.id}
-            onClick={() => toggleMember(member.id)}
-            className="bg-green-500/10 border border-green-500/20
-                       p-4 rounded-2xl cursor-pointer
-                       flex justify-between items-center
-                       hover:bg-green-500/20 transition"
-          >
+          <div className="flex justify-between items-center">
 
-            <div>
+            <div className="flex gap-4">
 
-              <p className="font-medium">
-                {member.name}
-              </p>
+              <div className="w-12 h-12 rounded-full bg-yellow-500 text-black font-bold flex items-center justify-center">
+                {member.name?.charAt(0)}
+              </div>
 
-              <p className="text-xs text-gray-400 uppercase">
-                {member.rollNo}
-              </p>
+              <div>
+
+                <h3 className="font-semibold text-lg">
+                  {member.name}
+                </h3>
+
+                <p className="text-sm text-gray-400 uppercase">
+                  {member.rollNo}
+                </p>
+
+                <span className="inline-block mt-2 px-3 py-1 rounded-full bg-white/10 text-xs">
+                  {getRoleIcon(member.role)} {member.role}
+                </span>
+
+              </div>
 
             </div>
 
-            <span className="text-xl">
-              ✅
-            </span>
+            <button className="bg-yellow-500 text-black px-4 py-2 rounded-xl font-semibold">
+              Mark Done
+            </button>
 
           </div>
 
-        ))}
+        </div>
 
-      </div>
+      ))}
 
     </div>
 
-    {/* Pending */}
+  </div>
 
-    <div>
+  {/* Submitted Section */}
 
-      <h2 className="text-yellow-400 text-xl font-semibold mb-4">
-        ⏳ Pending ({pendingMembers.length})
-      </h2>
+  <div>
 
-      <div className="space-y-3">
+    <h2 className="text-2xl font-bold text-green-400 mb-4">
+      ✅ Submitted ({completedMembers.length})
+    </h2>
 
-        {pendingMembers.map(member => (
+    <div className="space-y-3">
 
-          <div
-            key={member.id}
-            onClick={() => toggleMember(member.id)}
-            className="bg-yellow-500/10 border border-yellow-500/20
-                       p-4 rounded-2xl cursor-pointer
-                       flex justify-between items-center
-                       hover:bg-yellow-500/20 transition"
-          >
+      {completedMembers.map(member => (
 
-            <div>
+        <div
+          key={member.id}
+          onClick={() => toggleMember(member.id)}
+          className="bg-green-500/10 border border-green-500/20 rounded-3xl p-4 cursor-pointer hover:scale-[1.01] transition-all duration-300"
+        >
 
-              <p className="font-medium">
-                {member.name}
-              </p>
+          <div className="flex justify-between items-center">
 
-              <p className="text-xs text-gray-400 uppercase">
-                {member.rollNo}
-              </p>
+            <div className="flex gap-4">
+
+              <div className="w-12 h-12 rounded-full bg-green-500 text-black font-bold flex items-center justify-center">
+                {member.name?.charAt(0)}
+              </div>
+
+              <div>
+
+                <h3 className="font-semibold text-lg">
+                  {member.name}
+                </h3>
+
+                <p className="text-sm text-gray-400 uppercase">
+                  {member.rollNo}
+                </p>
+
+                <span className="inline-block mt-2 px-3 py-1 rounded-full bg-white/10 text-xs">
+                  {getRoleIcon(member.role)} {member.role}
+                </span>
+
+              </div>
 
             </div>
 
-            <span className="text-xl">
-              ⬜
-            </span>
+            <button className="bg-green-500 text-black px-4 py-2 rounded-xl font-semibold">
+              Submitted
+            </button>
 
           </div>
 
-        ))}
+        </div>
 
-      </div>
+      ))}
 
     </div>
 

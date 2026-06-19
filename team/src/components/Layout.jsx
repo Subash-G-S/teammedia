@@ -1,6 +1,7 @@
 import Sidebar from "./Sidebar"
 import Topbar from "./Topbar"
 import InstallButton from "./InstallButton"
+import ScrollToTopButton from "./ScrollToTopButton"
 
 function Layout({ children }) {
   return (
@@ -20,6 +21,7 @@ function Layout({ children }) {
         <div className="px-3 py-4 sm:p-6 lg:p-8">
           {children}
         </div>
+        <ScrollToTopButton />
 
       </div>
 
