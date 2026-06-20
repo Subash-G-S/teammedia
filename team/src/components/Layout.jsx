@@ -9,12 +9,27 @@ function Layout({ children }) {
       <InstallButton />
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 bg-black/20 backdrop-blur-xl border-r border-white/10">
-        <Sidebar />
-      </div>
+      <div
+  className="
+    hidden
+    md:flex
+    fixed
+    left-0
+    top-0
+    h-screen
+    w-64
+    bg-black/20
+    backdrop-blur-xl
+    border-r
+    border-white/10
+    z-40
+  "
+>
+  <Sidebar />
+</div>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col md:ml-64">
 
         <Topbar />
 
