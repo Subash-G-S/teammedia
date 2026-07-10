@@ -14,6 +14,7 @@ import Members from "./pages/Members"
 import Events from "./pages/Events"
 import Assignments from "./pages/Assignments"
 import GenerateLetter from "./pages/GenerateLetter"
+import EventDashboard from "./pages/EventDashboard"
 
 import Layout from "./components/Layout"
 
@@ -143,7 +144,7 @@ function App() {
           path="/events/:id"
           element={
             user
-              ? <Layout><Events /></Layout>
+              ? <Layout><EventDashboard /></Layout>
               : <Navigate to="/" />
           }
         />

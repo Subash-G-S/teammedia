@@ -1,59 +1,87 @@
-import { useState, useEffect } from "react"
-import { collection, addDoc, getDocs } from "firebase/firestore"
-import { db } from "../services/firebase"
-import { useParams, useNavigate } from "react-router-dom"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { collection, addDoc, doc, getDocs, writeBatch } from "firebase/firestore"
+import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
+import { db } from "../services/firebase"
+import EventCard from "../components/events/EventCard"
 import Loader from "../components/Loader"
+import { getEventMetrics, getEventStatus } from "../components/events/eventUtils"
 
-function Events(){
+const filterOptions = ["All", "Upcoming", "Ongoing", "Completed", "Cancelled"]
+const sortOptions = ["Newest", "Oldest", "Venue", "Coverage %", "Pending"]
+const MotionButton = motion.button
 
-  const [name,setName] = useState("")
-  const [type,setType] = useState("small")
-  const [parentId,setParentId] = useState("")
-  const [date,setDate] = useState("")
-  const [venue,setVenue] = useState("")
-  const [events,setEvents] = useState([])
-  const [loading,setLoading] = useState(true)
-  const [typeOpen, setTypeOpen] = useState(false)
+function Events() {
+  const [name, setName] = useState("")
+  const [type, setType] = useState("small")
+  const [parentId, setParentId] = useState("")
+  const [date, setDate] = useState("")
+  const [venue, setVenue] = useState("")
+  const [events, setEvents] = useState([])
+  const [assignments, setAssignments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState("All")
+  const [sort, setSort] = useState("Newest")
 
-  const { id } = useParams()
   const navigate = useNavigate()
 
-  const eventsRef = collection(db,"events")
-
-  const fetchEvents = async () => {
-    try{
+  const fetchEvents = useCallback(async () => {
+    try {
       setLoading(true)
-      const data = await getDocs(eventsRef)
-      setEvents(data.docs.map(doc => ({...doc.data(), id: doc.id})))
-    }catch(err){
+      const [eventsData, assignmentsData] = await Promise.all([
+        getDocs(collection(db, "events")),
+        getDocs(collection(db, "assignments"))
+      ])
+      setEvents(eventsData.docs.map(item => ({ ...item.data(), id: item.id })))
+      setAssignments(assignmentsData.docs.map(item => ({ ...item.data(), id: item.id })))
+    } catch (err) {
       console.error(err)
-    }finally{
+    } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(()=>{
-    fetchEvents()
-  },[])
+  useEffect(() => {
+    queueMicrotask(fetchEvents)
+  }, [fetchEvents])
 
-  const filteredEvents = id
-    ? events.filter(e => e.parentId === id)
-    : events.filter(e => !e.parentId)
+  const largeEvents = events.filter(event => event.type === "large")
+  const parentEvents = events.filter(event => !event.parentId)
+
+  const visibleEvents = useMemo(() => {
+    return parentEvents
+      .filter(event => {
+        const eventAssignments = assignments.filter(item => item.eventId === event.id)
+        const status = getEventStatus(event, eventAssignments)
+        return filter === "All" || status === filter
+      })
+      .sort((a, b) => {
+        const aAssignments = assignments.filter(item => item.eventId === a.id)
+        const bAssignments = assignments.filter(item => item.eventId === b.id)
+        const aMetrics = getEventMetrics(aAssignments)
+        const bMetrics = getEventMetrics(bAssignments)
+
+        if (sort === "Oldest") return new Date(a.date || 0) - new Date(b.date || 0)
+        if (sort === "Venue") return (a.venue || "").localeCompare(b.venue || "")
+        if (sort === "Coverage %") return bMetrics.coverage - aMetrics.coverage
+        if (sort === "Pending") return bMetrics.pending - aMetrics.pending
+        return new Date(b.date || 0) - new Date(a.date || 0)
+      })
+  }, [assignments, filter, parentEvents, sort])
 
   const addEvent = async () => {
-
-    if(!name || !date || !venue){
+    if (!name || !date || !venue) {
       alert("Fill all fields")
       return
     }
 
-    await addDoc(eventsRef,{
+    await addDoc(collection(db, "events"), {
       name,
       date,
       venue,
       type,
-      parentId: id || (type === "small" ? (parentId || null) : null)
+      parentId: type === "small" ? (parentId || null) : null,
+      createdAt: Date.now()
     })
 
     setName("")
@@ -61,152 +89,96 @@ function Events(){
     setVenue("")
     setType("small")
     setParentId("")
+    fetchEvents()
+  }
 
+  const deleteEvent = async (event) => {
+    const nestedEvents = events.filter(item => item.parentId === event.id)
+    const eventIds = [event.id, ...nestedEvents.map(item => item.id)]
+    const assignmentCount = assignments.filter(item => eventIds.includes(item.eventId)).length
+    const message = nestedEvents.length > 0
+      ? `Delete "${event.name}" with ${nestedEvents.length} sub-event(s) and ${assignmentCount} assignment(s)? This cannot be undone.`
+      : `Delete "${event.name}" and ${assignmentCount} assignment(s)? This cannot be undone.`
+
+    if (!window.confirm(message)) return
+
+    const batch = writeBatch(db)
+
+    eventIds.forEach(id => {
+      batch.delete(doc(db, "events", id))
+      batch.delete(doc(db, "eventReports", id))
+    })
+
+    assignments
+      .filter(item => eventIds.includes(item.eventId))
+      .forEach(item => batch.delete(doc(db, "assignments", item.id)))
+
+    await batch.commit()
     fetchEvents()
   }
 
   if (loading) return <Loader />
 
-  return(
-
-    <div>
-
-      <h1 className="text-2xl font-semibold mb-6 text-white">
-        Events
-      </h1>
-
-      {/* FORM */}
-
-      <div className="bg-white/10 backdrop-blur-xl border border-white/10 p-6 rounded-xl shadow-lg mb-6">
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-
-          <input
-            placeholder="Event Name"
-            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
-            value={name}
-            onChange={(e)=>setName(e.target.value)}
-          />
-
-          <input
-            type="date"
-            className="w-full bg-white/10 border border-white/20 p-3 rounded-lg text-sm"
-            value={date}
-            onChange={(e)=>setDate(e.target.value)}
-          />
-
-          <input
-            placeholder="Venue"
-            className="bg-white/10 border border-white/20 p-2 rounded-lg text-white"
-            value={venue}
-            onChange={(e)=>setVenue(e.target.value)}
-          />
-
-          <div className="relative">
-
-  {/* Button */}
-  <button
-    onClick={() => setTypeOpen(!typeOpen)}
-    className="w-full bg-white/10 border border-white/20 p-3 rounded-lg text-left text-white"
-  >
-    {type === "small" ? "Small Event" : "Large Event"}
-  </button>
-
-  {/* Options */}
-  {typeOpen && (
-    <div className="absolute mt-2 w-full bg-slate-900 border border-white/10 
-                    rounded-lg shadow-lg z-50">
-
-      <div
-        onClick={() => {
-          setType("small")
-          setTypeOpen(false)
-        }}
-        className="p-3 hover:bg-white/10 cursor-pointer"
-      >
-        Small Event
-      </div>
-
-      <div
-        onClick={() => {
-          setType("large")
-          setTypeOpen(false)
-        }}
-        className="p-3 hover:bg-white/10 cursor-pointer"
-      >
-        Large Event
-      </div>
-
-    </div>
-  )}
-
-</div>
-
-          <button
-            onClick={addEvent}
-            className="w-full sm:w-auto 
-             bg-blue-600 hover:bg-blue-700 
-             text-white 
-             py-3 px-4 
-             rounded-lg 
-             shadow-lg 
-             transition"
-          >
-            Add
-          </button>
-
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Events</h1>
+          <p className="mt-2 text-sm text-white/50">Plan coverage, track the media team, and close reports from one operations dashboard.</p>
         </div>
-
+        <div className="flex flex-wrap gap-2">
+          {filterOptions.map(item => (
+            <button key={item} onClick={() => setFilter(item)} className={`rounded-full px-4 py-2 text-sm transition ${filter === item ? "bg-white text-slate-950" : "bg-white/10 text-white/70 hover:bg-white/15"}`}>
+              {item}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* BACK BUTTON */}
-      {id && (
-        <button
-          onClick={()=>navigate("/events")}
-          className="mb-4 px-4 py-2 bg-white/10 rounded-lg"
-        >
-          ← Back
-        </button>
+      <div className="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-xl backdrop-blur-xl">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
+          <input placeholder="Event Name" className="rounded-xl border border-white/10 bg-white/10 p-3 text-white outline-none placeholder:text-white/35" value={name} onChange={(e) => setName(e.target.value)} />
+          <input type="date" className="rounded-xl border border-white/10 bg-white/10 p-3 text-white outline-none" value={date} onChange={(e) => setDate(e.target.value)} />
+          <input placeholder="Venue" className="rounded-xl border border-white/10 bg-white/10 p-3 text-white outline-none placeholder:text-white/35" value={venue} onChange={(e) => setVenue(e.target.value)} />
+          <select value={type} onChange={(e) => setType(e.target.value)} className="rounded-xl border border-white/10 bg-slate-950/70 p-3 text-white outline-none">
+            <option value="small">Small Event</option>
+            <option value="large">Large Event</option>
+          </select>
+          <select value={parentId} onChange={(e) => setParentId(e.target.value)} disabled={type === "large"} className="rounded-xl border border-white/10 bg-slate-950/70 p-3 text-white outline-none disabled:opacity-40">
+            <option value="">No Parent</option>
+            {largeEvents.map(event => <option key={event.id} value={event.id}>{event.name}</option>)}
+          </select>
+          <MotionButton whileTap={{ scale: 0.97 }} onClick={addEvent} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-blue-500">
+            Add Event
+          </MotionButton>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-white/45">{visibleEvents.length} event{visibleEvents.length !== 1 && "s"} shown</p>
+        <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-xl border border-white/10 bg-slate-950/70 p-3 text-sm text-white outline-none">
+          {sortOptions.map(item => <option key={item} value={item}>{item}</option>)}
+        </select>
+      </div>
+
+      {visibleEvents.length === 0 ? (
+        <div className="rounded-3xl border border-white/10 bg-white/10 p-10 text-center text-white/55">
+          No events match this filter.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">
+          {visibleEvents.map(event => (
+            <EventCard
+              key={event.id}
+              event={event}
+              assignments={assignments}
+              subEvents={events.filter(item => item.parentId === event.id)}
+              onOpen={(id) => navigate(`/events/${id}`)}
+              onDelete={deleteEvent}
+            />
+          ))}
+        </div>
       )}
-
-      {/* EVENTS GRID */}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-
-        {filteredEvents.map(event => (
-
-          <motion.div
-            key={event.id}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-            className="bg-white/10 backdrop-blur-xl border border-white/10 
-                       p-6 rounded-xl shadow-lg 
-                       hover:shadow-blue-500/20 
-                       cursor-pointer transition-all duration-300"
-
-            onClick={()=>{
-              if(event.type === "large"){
-                navigate(`/events/${event.id}`)
-              } else {
-                navigate(`/assignments/${event.id}`)
-              }
-            }}
-          >
-
-            <h2 className="text-lg font-semibold text-white">
-              {event.name}
-            </h2>
-
-            <p className="text-sm text-gray-300 mt-2">
-              {event.type === "large" ? "Large Event" : "Small Event"}
-            </p>
-
-          </motion.div>
-
-        ))}
-
-      </div>
-
     </div>
   )
 }
