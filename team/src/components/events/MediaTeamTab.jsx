@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { Search } from "lucide-react"
 import MemberCard from "./MemberCard"
@@ -14,9 +14,35 @@ function MediaTeamTab({ members, assignments, allAssignments, onAssign, onStatus
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState("All")
   const [selectedMember, setSelectedMember] = useState("")
+  const [memberSearch, setMemberSearch] = useState("")
+  const [memberPickerOpen, setMemberPickerOpen] = useState(false)
   const [role, setRole] = useState("")
   const [historyMember, setHistoryMember] = useState(null)
   const formRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (formRef.current && !formRef.current.contains(event.target)) {
+        setMemberPickerOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const filteredMembers = useMemo(() => {
+    const query = memberSearch.trim().toLowerCase()
+
+    if (!query) return members
+
+    return members.filter(member => {
+      const haystack = `${member.name || ""} ${getRollNumber(member)} ${member.role || ""}`.toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [memberSearch, members])
+
+  const selectedMemberData = members.find(member => member.id === selectedMember)
 
   const visibleAssignments = useMemo(() => {
     return assignments
@@ -44,6 +70,8 @@ function MediaTeamTab({ members, assignments, allAssignments, onAssign, onStatus
     }
     await onAssign(selectedMember, role)
     setSelectedMember("")
+    setMemberSearch("")
+    setMemberPickerOpen(false)
     setRole("")
   }
 
@@ -51,12 +79,57 @@ function MediaTeamTab({ members, assignments, allAssignments, onAssign, onStatus
     <MotionDiv initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       <div ref={formRef} className="rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur-xl">
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
-          <select value={selectedMember} onChange={(e) => setSelectedMember(e.target.value)} className="rounded-xl border border-white/10 bg-slate-950/70 p-3 text-sm text-white outline-none">
-            <option value="">Select Member</option>
-            {members.map(member => (
-              <option key={member.id} value={member.id}>{member.name} - {getRollNumber(member)}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setMemberPickerOpen(open => !open)}
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-950/70 p-3 text-left text-sm text-white outline-none transition hover:bg-slate-900/80"
+            >
+              <span className={selectedMemberData ? "text-white" : "text-white/40"}>
+                {selectedMemberData ? `${selectedMemberData.name} - ${getRollNumber(selectedMemberData)}` : "Search and select member"}
+              </span>
+              <Search size={16} className="shrink-0 text-white/40" />
+            </button>
+
+            {memberPickerOpen && (
+              <div className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-2xl shadow-black/30">
+                <div className="relative border-b border-white/10">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35" size={17} />
+                  <input
+                    autoFocus
+                    value={memberSearch}
+                    onChange={(e) => setMemberSearch(e.target.value)}
+                    placeholder="Search name, roll number or role"
+                    className="w-full bg-transparent py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/35"
+                  />
+                </div>
+
+                <div className="max-h-64 overflow-y-auto p-2">
+                  {filteredMembers.length === 0 ? (
+                    <p className="px-3 py-4 text-sm text-white/45">No members found</p>
+                  ) : (
+                    filteredMembers.map(member => (
+                      <button
+                        key={member.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedMember(member.id)
+                          setMemberSearch("")
+                          setMemberPickerOpen(false)
+                        }}
+                        className={`w-full rounded-xl p-3 text-left transition hover:bg-white/10 ${selectedMember === member.id ? "bg-white/10" : ""}`}
+                      >
+                        <span className="block font-semibold text-white">{member.name}</span>
+                        <span className="mt-1 block text-xs text-white/45">
+                          {getRollNumber(member)} - {member.role || "Media"}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-xl border border-white/10 bg-slate-950/70 p-3 text-sm text-white outline-none">
             <option value="">Select Role</option>
             {roles.map(item => <option key={item} value={item}>{item}</option>)}
