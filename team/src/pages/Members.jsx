@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react"
+import { useCallback, useState, useEffect } from "react"
 import { collection, addDoc, getDocs, deleteDoc, doc } from "firebase/firestore"
+import { Download } from "lucide-react"
 import { db } from "../services/firebase"
 import Loader from "../components/Loader"
 
@@ -22,14 +23,50 @@ function Members() {
   const [role, setRole] = useState("")
   const [search, setSearch] = useState("")
 
-  const membersRef = collection(db, "members")
-  const assignmentsRef = collection(db, "assignments")
+  const getRollNumber = (member) => (
+    member.rollNo || member.rollNumber || member.department || ""
+  )
+
+  const exportMembersToExcel = async () => {
+    if (members.length === 0) {
+      alert("No members to export")
+      return
+    }
+
+    const rows = members
+      .slice()
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+      .map(member => ({
+        "Member Name": member.name || "",
+        "Roll Number": getRollNumber(member),
+        Role: member.role || ""
+      }))
+
+    const XLSX = await import("xlsx")
+    const worksheet = XLSX.utils.json_to_sheet(rows)
+    const workbook = XLSX.utils.book_new()
+    const columnWidths = [
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 22 }
+    ]
+    const today = new Date().toISOString().slice(0, 10)
+
+    worksheet["!cols"] = columnWidths
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Members")
+    XLSX.writeFile(workbook, `team-media-members-${today}.xlsx`, {
+      compression: true,
+      bookType: "xlsx"
+    })
+  }
 
   // 🔹 Fetch Data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
 
+      const membersRef = collection(db, "members")
+      const assignmentsRef = collection(db, "assignments")
       const membersData = await getDocs(membersRef)
       const assignmentsData = await getDocs(assignmentsRef)
 
@@ -52,18 +89,18 @@ function Members() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    queueMicrotask(fetchData)
+  }, [fetchData])
 
   // 🔹 Add Member
   const addMember = async () => {
 
     if (!name || !department || !role) return
 
-    await addDoc(membersRef, {
+    await addDoc(collection(db, "members"), {
       name,
       department,
       role
@@ -79,9 +116,7 @@ function Members() {
   // 🔹 Delete Member
   const deleteMember = async (id) => {
 
-    const memberDoc = doc(db, "members", id)
-
-    await deleteDoc(memberDoc)
+    await deleteDoc(doc(db, "members", id))
 
     fetchData()
   }
@@ -97,9 +132,19 @@ function Members() {
 
     <div>
 
-      <h1 className="text-2xl font-semibold mb-6 text-white">
-        Members
-      </h1>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-semibold text-white">
+          Members
+        </h1>
+
+        <button
+          onClick={exportMembersToExcel}
+          className="inline-flex w-fit items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 active:scale-95"
+        >
+          <Download size={16} />
+          Export Excel
+        </button>
+      </div>
 
       {/* 🔥 ADD MEMBER */}
 
